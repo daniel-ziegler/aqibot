@@ -1,1 +1,0 @@
-export declare const SLACK_POST_URL: string
