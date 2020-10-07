@@ -1,7 +1,7 @@
 import calculateAQI from './calculateAQI'
 
 type RawOneSensorData = {
-  pm2_5_atm: number, pm2_5_cf_1: number, humidity: number, ParentID?: number
+  pm2_5_atm: string, pm2_5_cf_1: string, humidity: string
 }
 
 type RawSensorData = {
@@ -14,19 +14,28 @@ type SensorData = {
   humidity: number
 }
 
+function average(xs: number[]): number {
+  return xs.reduce((a, b) => a + b) / xs.length
+}
+
+function averageDatas(datas: SensorData[]): SensorData {
+  return {
+    pm25_cf_1: average(datas.map(d => d.pm25_cf_1).filter(x => x)),
+    pm25_cf_atm: average(datas.map(d => d.pm25_cf_atm).filter(x => x)),
+    humidity: average(datas.map(d => d.humidity).filter(x => x))
+  }
+}
+
 function processData(data: RawSensorData): SensorData | null {
   if (!data.results) {
     return null
   }
-  const mainSensorResults = data.results.filter(r => !r.ParentID)
-  if (mainSensorResults.length != 1) {
-    return null
-  }
-  const mainSensorData = mainSensorResults[0]
-  return {
-    pm25_cf_1: mainSensorData["pm2_5_cf_1"], pm25_cf_atm: mainSensorData["pm2_5_atm"],
-    humidity: mainSensorData["humidity"]
-  }
+  const datas = data.results.map(d => ({
+    pm25_cf_1: +d["pm2_5_cf_1"],
+    pm25_cf_atm: +d["pm2_5_atm"],
+    humidity: +d["humidity"]
+  }))
+  return averageDatas(datas)
 }
 
 function epaAqi(data: SensorData): number {
