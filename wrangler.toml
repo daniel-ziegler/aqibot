@@ -1,4 +1,4 @@
-name = "aqiduck"
+name = "aqibot"
 type = "webpack"
 account_id = "b341b34f08f196c03b0eb98ff8761553"
 workers_dev = true
