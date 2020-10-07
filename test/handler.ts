@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import { describe } from 'mocha'
 import { handleRequest } from '../src/handler'
 
 describe('handler returns response with request method', () => {
