@@ -6,6 +6,8 @@ export async function buildGCPClient() {
 
 type Config = typeof google_private
 
+type pc = Partial<Config>
+
 export class GCPClient {
   url: string
   config: Config
@@ -24,6 +26,9 @@ export class GCPClient {
     const resp = await fetch(`${this.url}/${collection}/${documentId}`, {
       headers,
     })
+    if (resp.status == 404) {
+      return null
+    }
     if (!resp.ok) {
       throw new Error(resp.statusText)
     }

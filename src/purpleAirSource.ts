@@ -26,9 +26,9 @@ function averageDatas(datas: SensorData[]): SensorData {
   }
 }
 
-function processData(data: RawSensorData): SensorData | null {
+function processData(data: RawSensorData): SensorData {
   if (!data.results) {
-    return null
+    throw new Error(`no results: ${Object.entries(data)}`)
   }
   const datas = data.results.map(d => ({
     pm25_cf_1: +d["pm2_5_cf_1"],
@@ -43,13 +43,10 @@ function epaAqi(data: SensorData): number {
 }
 
 export async function getAqi(): Promise<number> {
-  const apiUrl = "https://www.purpleair.com/json?key=14036BZ1E97OKE1B&show=23905"
+  const apiUrl = "https://www.purpleair.com/json?key=LEGDS9XCK5RRE19Z&show=65513"
   const resp = await fetch(new Request(apiUrl))
   const rawData = await resp.json() as RawSensorData
   const data = processData(rawData)
-  if (!data) {
-    throw new Error("no data")
-  }
   const pm25 = epaAqi(data)
   const aqiData = calculateAQI(pm25)
   return aqiData.AQI
