@@ -10,7 +10,7 @@ export class GCPClient {
   url: string
   config: Config
   constructor(config: Config) {
-    this.url = "https://firestore.googleapis.com/v1beta1/projects/aqibot-291821/databases/(default)/documents"
+    this.url = "https://firestore.googleapis.com/v1/projects/aqibot-291821/databases/(default)/documents"
     this.config = config
   }
 
