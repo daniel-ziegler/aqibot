@@ -24,4 +24,10 @@ module.exports = {
       },
     ],
   },
+  node: {
+    net: 'empty',
+    tls: 'empty',
+    fs: 'empty',
+    child_process: 'empty'
+  }
 }

@@ -4,6 +4,6 @@ addEventListener('fetch', (event) => {
   event.respondWith(handleRequest(event.request))
 })
 
-addEventListener("scheduled", event => {
+addEventListener("scheduled", (event: any /* ScheduledEvent */) => {
   event.waitUntil(handleScheduled(event))
 })
