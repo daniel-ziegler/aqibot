@@ -1,8 +1,11 @@
+import _ from 'lodash'
+
 import google_private from '../config/google_private'
 
-export async function buildGCPClient() {
+async function buildGCPClient() {
   return new GCPClient(google_private)
 }
+export const getGCPClient = _.once(buildGCPClient)
 
 type Config = typeof google_private
 
@@ -153,7 +156,7 @@ async function getAuthToken(config: Config): Promise<OAuthToken> {
 
   // Sign the header and claimset
   const rawToken = await crypto.subtle.sign(
-    { name: 'RSASSA-PKCS1-v1_5' },
+    'RSASSA-PKCS1-v1_5',
     key,
     new TextEncoder().encode(`${GOOGLE_KEY_HEADER}.${claimset}`),
   )
