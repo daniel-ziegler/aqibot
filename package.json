@@ -12,7 +12,7 @@
     "transpile": "tsc --project ./test"
   },
   "author": "author",
-  "license": "MIT OR Apache-2.0",
+  "license": "MIT",
   "devDependencies": {
     "@cloudflare/workers-types": "^2.0.0",
     "@types/chai": "^4.2.11",
