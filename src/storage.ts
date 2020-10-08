@@ -24,23 +24,31 @@ export class GCPClient {
     const resp = await fetch(`${this.url}/${collection}/${documentId}`, {
       headers,
     })
-    return await resp.json()
+    if (!resp.ok) {
+      throw new Error(resp.statusText)
+    }
+    return resp.json()
   }
 
-  async postDocument(collection: string, doc: any, documentId: string | null = null) {
-    let headers = await this.authHeaders()
-    let fields = Object.entries(doc).reduce((acc, [k, v]) => ({ ...acc, [k]: { stringValue: v } }), {})
-    let qs = ''
-    if (documentId) {
-      qs = `?documentId=${encodeURIComponent(documentId)}`
+  async patchDocument(collection: string, documentId: string, doc: any) {
+    const headers = await this.authHeaders()
+    const fields = Object.entries(doc).reduce(
+      (acc, [k, v]) => ({ ...acc, [k]: encodeFieldValue(v) }),
+      {}
+    )
+    let url = new URL(`${this.url}/${collection}/${documentId}`)
+    for (let k of Object.keys(doc)) {
+      url.searchParams.append("mask.fieldPaths", k)
     }
-    return fetch(`${this.url}/${collection}${qs}`, {
+    const resp = await fetch(url.href, {
       headers,
-      method: 'POST',
-      body: JSON.stringify({
-        fields,
-      })
+      method: 'PATCH',
+      body: JSON.stringify({ fields })
     })
+    if (!resp.ok) {
+      throw new Error(resp.statusText)
+    }
+    return resp.json()
   }
 
   async listDocuments(collection: string, nextPageToken?: string) {
@@ -53,6 +61,16 @@ export class GCPClient {
       method: 'GET',
       headers,
     })
+  }
+}
+
+function encodeFieldValue(v: any) {
+  if (typeof v === "number") {
+    return { doubleValue: v }
+  } else if (typeof v === "string") {
+    return { stringValue: v }
+  } else {
+    throw new Error(`don't know how to handle ${v}`)
   }
 }
 

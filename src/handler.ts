@@ -6,8 +6,9 @@ declare const SLACK_POST_URL: string
 export async function handleRequest(request: Request): Promise<Response> {
   const client = await buildGCPClient()
   const doc = await client.getDocument('sensors', 'goldenbear')
+  const doc2 = await client.patchDocument('sensors', 'goldenbear', { last_aqi: 42 })
   const aqi = await getAqi()
-  return new Response(`AQI ${aqi}; doc: ${Object.entries(doc.fields.purpleair_readkey)}`)
+  return new Response(`AQI ${aqi}; doc: ${Object.entries(doc2.fields.last_aqi)}`)
 }
 
 export async function handleScheduled(event: any /* ScheduledEvent */): Promise<void> {
