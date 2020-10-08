@@ -21,9 +21,9 @@ export async function handleScheduled(event: any /* ScheduledEvent */): Promise<
   const lastAqi = data && data.last_aqi
   await updateData(SENSOR, { last_aqi: aqi })
   if ((lastAqi === null || lastAqi > THRESHOLD_LO) && aqi <= THRESHOLD_LO) {
-    await postToSlack(`Open your windows! AQI ${aqi}`)
+    await postToSlack(`🟩️ Open your windows! AQI ${aqi}`)
   } else if ((lastAqi === null || lastAqi < THRESHOLD_HI) && aqi >= THRESHOLD_HI) {
-    await postToSlack(`Close your windows! AQI ${aqi}`)
+    await postToSlack(`🟧 Close your windows! AQI ${aqi}`)
   }
 }
 
