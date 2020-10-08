@@ -1,20 +1,30 @@
+import _ from 'lodash'
 import { getAqi } from './purpleAirSource'
 import { buildGCPClient } from './storage'
 
 declare const SLACK_POST_URL: string
 
+const THRESHOLD_LO = 40
+const THRESHOLD_HI = 60
+
+const getGCPClient = _.once(buildGCPClient)
+
 export async function handleRequest(request: Request): Promise<Response> {
-  const client = await buildGCPClient()
-  const doc = await client.getDocument('sensors', 'goldenbear')
-  const doc2 = await client.patchDocument('sensors', 'goldenbear', { last_aqi: 42 })
+  const client = await getGCPClient()
   const aqi = await getAqi()
-  return new Response(`AQI ${aqi}; doc: ${Object.entries(doc2.fields.last_aqi)}`)
+  const lastAqi = (await client.getDocument('sensors', 'goldenbear')).last_aqi
+  return new Response(`AQI ${aqi}; last AQI: ${lastAqi}`)
 }
 
 export async function handleScheduled(event: any /* ScheduledEvent */): Promise<void> {
+  const client = await getGCPClient()
   const aqi = await getAqi()
-  if (aqi !== null && aqi <= 50) {
-    await postToSlack(`AQI ${aqi}`)
+  const lastAqi = (await client.getDocument('sensors', 'goldenbear')).last_aqi
+  await client.patchDocument('sensors', 'goldenbear', { last_aqi: aqi })
+  if (lastAqi > THRESHOLD_LO && aqi <= THRESHOLD_LO) {
+    await postToSlack(`Open your windows! AQI ${aqi}`)
+  } else if (lastAqi < THRESHOLD_HI && aqi >= THRESHOLD_HI) {
+    await postToSlack(`Close your windows! AQI ${aqi}`)
   }
 }
 

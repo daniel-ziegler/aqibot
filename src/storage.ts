@@ -27,7 +27,8 @@ export class GCPClient {
     if (!resp.ok) {
       throw new Error(resp.statusText)
     }
-    return resp.json()
+    const doc = await resp.json() as { fields: GoogleObj }
+    return decodeObj(doc.fields)
   }
 
   async patchDocument(collection: string, documentId: string, doc: any) {
@@ -48,7 +49,8 @@ export class GCPClient {
     if (!resp.ok) {
       throw new Error(resp.statusText)
     }
-    return resp.json()
+    const newDoc = await resp.json() as { fields: GoogleObj }
+    return decodeObj(newDoc.fields)
   }
 
   async listDocuments(collection: string, nextPageToken?: string) {
@@ -64,13 +66,36 @@ export class GCPClient {
   }
 }
 
-function encodeFieldValue(v: any) {
+type GoogleVal =
+  | { doubleValue: number }
+  | { intValue: number }
+  | { stringValue: string }
+
+type GoogleObj = { [k: string]: GoogleVal }
+
+function encodeFieldValue(v: any): GoogleVal {
   if (typeof v === "number") {
     return { doubleValue: v }
   } else if (typeof v === "string") {
     return { stringValue: v }
   } else {
     throw new Error(`don't know how to handle ${v}`)
+  }
+}
+
+function decodeObj(o: GoogleObj): any {
+  return Object.fromEntries(Object.entries(o).map(([k, v]) => [k, decodeFieldValue(v)]))
+}
+
+function decodeFieldValue(v: GoogleVal): any {
+  if ('doubleValue' in v) {
+    return v.doubleValue
+  } else if ('intValue' in v) {
+    return v.intValue
+  } else if ('stringValue' in v) {
+    return v.stringValue
+  } else {
+    throw new Error(`don't know how to handle ${Object.entries(v)}`)
   }
 }
 
