@@ -8,8 +8,9 @@ type SiteState = {
   last_category: string
 }
 
-function is_valid(state: any): state is SiteState {
-  return (state as SiteState).last_aqi !== undefined
+function is_valid(maybe_state: any): maybe_state is SiteState {
+  const state = maybe_state as SiteState
+  return state.last_aqi !== undefined && state.last_category !== undefined
 }
 
 export async function getState(site: string): Promise<SiteState | null> {

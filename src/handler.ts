@@ -9,6 +9,15 @@ const THRESHOLD_LO = 40
 const THRESHOLD_HI = 50
 
 export async function handleRequest(request: Request): Promise<Response> {
+  const url = new URL(request.url)
+  if (url.pathname == "/trigger") {
+    try {
+      await handleScheduled(null)
+    } catch (ex) {
+      return new Response(ex.stack, { status: 500 })
+    }
+    return new Response(`Success`)
+  }
   const data = await getState(SITE)
   const lastAqi = data && data.last_aqi
   return new Response(`Last AQI: ${lastAqi}`)
@@ -18,7 +27,7 @@ export async function handleScheduled(event: any /* ScheduledEvent */): Promise<
   const aqi = await getAqi()
   const data = await getState(SITE)
   const lastCategory = data && data.last_category
-  let newCategory
+  let newCategory = undefined  // won't update if undefined
   if ((lastCategory === null || lastCategory === "bad") && aqi <= THRESHOLD_LO) {
     newCategory = "good"
     await postToSlack(`🟩️ Open your windows! AQI ${aqi}`)

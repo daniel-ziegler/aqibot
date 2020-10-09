@@ -9,8 +9,6 @@ export const getGCPClient = _.once(buildGCPClient)
 
 type Config = typeof google_private
 
-type pc = Partial<Config>
-
 export class GCPClient {
   url: string
   config: Config
@@ -39,15 +37,14 @@ export class GCPClient {
     return decodeObj(doc.fields)
   }
 
+  // Treats undefined fields as nonexistent but null fields as nulls
   async patchDocument(collection: string, documentId: string, doc: any) {
     const headers = await this.authHeaders()
-    const fields = Object.entries(doc).reduce(
-      (acc, [k, v]) => ({ ...acc, [k]: encodeFieldValue(v) }),
-      {}
-    )
+    const entries = Object.entries(doc).filter(([k, v]) => v !== undefined)
+    const fields = entries.reduce((acc, [k, v]) => ({ ...acc, [k]: encodeFieldValue(v) }), {})
     let url = new URL(`${this.url}/${collection}/${documentId}`)
-    for (let k of Object.keys(doc)) {
-      url.searchParams.append("mask.fieldPaths", k)
+    for (let [k, v] of entries) {
+      url.searchParams.append("updateMask.fieldPaths", k)
     }
     const resp = await fetch(url.href, {
       headers,
@@ -76,8 +73,9 @@ export class GCPClient {
 
 type GoogleVal =
   | { doubleValue: number }
-  | { integerValue: number }
+  | { integerValue: string }
   | { stringValue: string }
+  | { nullValue: null }
 
 type GoogleObj = { [k: string]: GoogleVal }
 
@@ -86,6 +84,10 @@ function encodeFieldValue(v: any): GoogleVal {
     return { doubleValue: v }
   } else if (typeof v === "string") {
     return { stringValue: v }
+  } else if (typeof v === "bigint") {
+    return { integerValue: v.toString() }
+  } else if (v === null) {
+    return { nullValue: null }
   } else {
     throw new Error(`don't know how to handle ${v}`)
   }
@@ -99,9 +101,11 @@ function decodeFieldValue(v: GoogleVal): any {
   if ('doubleValue' in v) {
     return v.doubleValue
   } else if ('integerValue' in v) {
-    return v.integerValue
+    return BigInt(v.integerValue)
   } else if ('stringValue' in v) {
     return v.stringValue
+  } else if ('nullValue' in v) {
+    return null
   } else {
     throw new Error(`don't know how to handle ${Object.entries(v)}`)
   }
