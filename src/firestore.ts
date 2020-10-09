@@ -76,7 +76,7 @@ export class GCPClient {
 
 type GoogleVal =
   | { doubleValue: number }
-  | { intValue: number }
+  | { integerValue: number }
   | { stringValue: string }
 
 type GoogleObj = { [k: string]: GoogleVal }
@@ -98,8 +98,8 @@ function decodeObj(o: GoogleObj): any {
 function decodeFieldValue(v: GoogleVal): any {
   if ('doubleValue' in v) {
     return v.doubleValue
-  } else if ('intValue' in v) {
-    return v.intValue
+  } else if ('integerValue' in v) {
+    return v.integerValue
   } else if ('stringValue' in v) {
     return v.stringValue
   } else {

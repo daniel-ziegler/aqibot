@@ -1,27 +1,28 @@
 
 import { getGCPClient } from './firestore'
 
-const SENSORS_COLLECTION = 'sensors'
+const SITES_COLLECTION = 'sites'
 
-type SavedSensorData = {
+type SiteState = {
   last_aqi: number
+  last_category: string
 }
 
-function is_valid(data: any): data is SavedSensorData {
-  return (data as SavedSensorData).last_aqi !== undefined
+function is_valid(state: any): state is SiteState {
+  return (state as SiteState).last_aqi !== undefined
 }
 
-export async function getData(sensor: string): Promise<SavedSensorData | null> {
+export async function getState(site: string): Promise<SiteState | null> {
   const client = await getGCPClient()
-  const doc = await client.getDocument(SENSORS_COLLECTION, sensor)
+  const doc = await client.getDocument(SITES_COLLECTION, site)
   if (doc === null || is_valid(doc)) {
     return doc
   } else {
-    throw new Error(`Invalid saved data: ${Object.entries(doc)}`)
+    throw new Error(`Invalid saved state: ${Object.entries(doc)}`)
   }
 }
 
-export async function updateData(sensor: string, data: Partial<SavedSensorData>): Promise<void> {
+export async function patchState(site: string, state: Partial<SiteState>): Promise<void> {
   const client = await getGCPClient()
-  return client.patchDocument(SENSORS_COLLECTION, sensor, data)
+  return client.patchDocument(SITES_COLLECTION, site, state)
 }
