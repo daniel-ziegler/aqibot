@@ -1,5 +1,11 @@
+import TimeAgo from 'javascript-time-ago'
+import en from 'javascript-time-ago/locale/en'
+
 import { getAqi } from './purpleAirSource'
 import { getState, patchState } from './dataStorage'
+
+TimeAgo.addLocale(en)
+const timeAgo = new TimeAgo('en-US')
 
 declare const SLACK_POST_URL: string
 
@@ -9,6 +15,7 @@ const THRESHOLD_LO = 40
 const THRESHOLD_HI = 50
 
 export async function handleRequest(request: Request): Promise<Response> {
+  let responseText = ""
   const url = new URL(request.url)
   if (url.pathname == "/trigger") {
     try {
@@ -16,11 +23,16 @@ export async function handleRequest(request: Request): Promise<Response> {
     } catch (ex) {
       return new Response(ex.stack, { status: 500 })
     }
-    return new Response(`Success`)
+    responseText += "Triggered.\n"
   }
-  const data = await getState(SITE)
-  const lastAqi = data && data.last_aqi
-  return new Response(`Last AQI: ${lastAqi}`)
+  const state = await getState(SITE)
+  if (state === null) {
+    responseText += "No data yet.\n"
+  } else {
+    const ago = timeAgo.format(state.updated.getTime(), 'round')
+    responseText += `Last state (${ago}): AQI ${state.last_aqi}, ${state.last_category}.`
+  }
+  return new Response(responseText)
 }
 
 export async function handleScheduled(event: any /* ScheduledEvent */): Promise<void> {
@@ -35,7 +47,7 @@ export async function handleScheduled(event: any /* ScheduledEvent */): Promise<
     newCategory = "bad"
     await postToSlack(`🟧 Close your windows! AQI ${aqi}`)
   }
-  await patchState(SITE, { last_aqi: aqi, last_category: newCategory })
+  await patchState(SITE, { last_aqi: aqi, last_category: newCategory, updated: new Date() })
 }
 
 async function postToSlack(text: string): Promise<void> {

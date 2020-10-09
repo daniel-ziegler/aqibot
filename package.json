@@ -29,5 +29,9 @@
     "webpack-cli": "^3.3.12",
     "@types/lodash": "^4.14.161",
     "lodash": "^4.17.20"
+  },
+  "dependencies": {
+    "@types/javascript-time-ago": "^2.0.1",
+    "javascript-time-ago": "^2.2.3"
   }
 }

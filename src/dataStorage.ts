@@ -5,11 +5,14 @@ const SITES_COLLECTION = 'sites'
 type SiteState = {
   last_aqi: number
   last_category: string
+  updated: Date
 }
 
 function is_valid(maybe_state: any): maybe_state is SiteState {
   const state = maybe_state as SiteState
-  return state.last_aqi !== undefined && state.last_category !== undefined
+  return state.last_aqi !== undefined
+    && state.last_category !== undefined
+    && state.updated !== undefined
 }
 
 export async function getState(site: string): Promise<SiteState | null> {

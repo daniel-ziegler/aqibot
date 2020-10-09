@@ -33,7 +33,7 @@ export class GCPClient {
     if (!resp.ok) {
       throw new Error(resp.statusText)
     }
-    const doc = await resp.json() as { fields: GoogleObj }
+    const doc = await resp.json() as { fields: FirestoreRestObj }
     return decodeObj(doc.fields)
   }
 
@@ -54,7 +54,7 @@ export class GCPClient {
     if (!resp.ok) {
       throw new Error(resp.statusText)
     }
-    const newDoc = await resp.json() as { fields: GoogleObj }
+    const newDoc = await resp.json() as { fields: FirestoreRestObj }
     return decodeObj(newDoc.fields)
   }
 
@@ -71,41 +71,47 @@ export class GCPClient {
   }
 }
 
-type GoogleVal =
-  | { doubleValue: number }
-  | { integerValue: string }
-  | { stringValue: string }
+// https://cloud.google.com/firestore/docs/reference/rest/v1/Value
+type FirestoreRestVal =
   | { nullValue: null }
+  | { integerValue: string }
+  | { doubleValue: number }
+  | { timestampValue: string }
+  | { stringValue: string }
 
-type GoogleObj = { [k: string]: GoogleVal }
+type FirestoreRestObj = { [k: string]: FirestoreRestVal }
 
-function encodeFieldValue(v: any): GoogleVal {
-  if (typeof v === "number") {
-    return { doubleValue: v }
-  } else if (typeof v === "string") {
-    return { stringValue: v }
+function encodeFieldValue(v: any): FirestoreRestVal {
+  if (v === null) {
+    return { nullValue: null }
   } else if (typeof v === "bigint") {
     return { integerValue: v.toString() }
-  } else if (v === null) {
-    return { nullValue: null }
+  } else if (typeof v === "number") {
+    return { doubleValue: v }
+  } else if (v instanceof Date) {
+    return { timestampValue: v.toISOString() }
+  } else if (typeof v === "string") {
+    return { stringValue: v }
   } else {
     throw new Error(`don't know how to handle ${v}`)
   }
 }
 
-function decodeObj(o: GoogleObj): any {
+function decodeObj(o: FirestoreRestObj): any {
   return Object.fromEntries(Object.entries(o).map(([k, v]) => [k, decodeFieldValue(v)]))
 }
 
-function decodeFieldValue(v: GoogleVal): any {
-  if ('doubleValue' in v) {
-    return v.doubleValue
+function decodeFieldValue(v: FirestoreRestVal): any {
+  if ('nullValue' in v) {
+    return null
   } else if ('integerValue' in v) {
     return BigInt(v.integerValue)
+  } else if ('doubleValue' in v) {
+    return v.doubleValue
+  } else if ('timestampValue' in v) {
+    return new Date(v.timestampValue)
   } else if ('stringValue' in v) {
     return v.stringValue
-  } else if ('nullValue' in v) {
-    return null
   } else {
     throw new Error(`don't know how to handle ${Object.entries(v)}`)
   }
