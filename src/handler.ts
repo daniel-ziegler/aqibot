@@ -9,10 +9,9 @@ const THRESHOLD_LO = 50
 const THRESHOLD_HI = 70
 
 export async function handleRequest(request: Request): Promise<Response> {
-  const aqi = await getAqi()
   const data = await getData(SENSOR)
   const lastAqi = data && data.last_aqi
-  return new Response(`AQI ${aqi}; last AQI: ${lastAqi}`)
+  return new Response(`Last AQI: ${lastAqi}`)
 }
 
 export async function handleScheduled(event: any /* ScheduledEvent */): Promise<void> {
