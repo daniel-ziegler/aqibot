@@ -17,13 +17,16 @@ export async function handleRequest(request: Request): Promise<Response> {
 export async function handleScheduled(event: any /* ScheduledEvent */): Promise<void> {
   const aqi = await getAqi()
   const data = await getState(SITE)
-  const lastAqi = data && data.last_aqi
-  await patchState(SITE, { last_aqi: aqi })
-  if ((lastAqi === null || lastAqi > THRESHOLD_LO) && aqi <= THRESHOLD_LO) {
+  const lastCategory = data && data.last_category
+  let newCategory
+  if ((lastCategory === null || lastCategory === "bad") && aqi <= THRESHOLD_LO) {
+    newCategory = "good"
     await postToSlack(`🟩️ Open your windows! AQI ${aqi}`)
-  } else if ((lastAqi === null || lastAqi < THRESHOLD_HI) && aqi >= THRESHOLD_HI) {
+  } else if ((lastCategory === null || lastCategory === "good") && aqi >= THRESHOLD_HI) {
+    newCategory = "bad"
     await postToSlack(`🟧 Close your windows! AQI ${aqi}`)
   }
+  await patchState(SITE, { last_aqi: aqi, last_category: newCategory })
 }
 
 async function postToSlack(text: string): Promise<void> {
