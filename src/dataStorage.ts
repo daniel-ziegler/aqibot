@@ -1,4 +1,3 @@
-
 import { getGCPClient } from './firestore'
 
 const SITES_COLLECTION = 'sites'

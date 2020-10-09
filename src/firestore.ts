@@ -1,11 +1,11 @@
-import _ from 'lodash'
+import once from 'lodash/once'
 
 import google_private from '../config/google_private'
 
 async function buildGCPClient() {
   return new GCPClient(google_private)
 }
-export const getGCPClient = _.once(buildGCPClient)
+export const getGCPClient = once(buildGCPClient)
 
 type Config = typeof google_private
 
