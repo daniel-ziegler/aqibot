@@ -36,9 +36,12 @@ export async function handleRequest(request: Request): Promise<Response> {
 }
 
 export async function handleScheduled(event: any /* ScheduledEvent */): Promise<void> {
-  const aqi = await getAqi()
   const data = await getState(SITE)
-  const lastCategory = data && data.last_category
+  if (!data) {
+    throw new Error("no data")
+  }
+  const aqi = await getAqi(data.sensor_id)
+  const lastCategory = data.last_category
   let newCategory = undefined  // won't update if undefined
   if ((lastCategory === null || lastCategory === "bad") && aqi <= THRESHOLD_LO) {
     newCategory = "good"

@@ -42,9 +42,10 @@ function epaAqi(data: SensorData): number {
   return 5.604 + 0.534 * data.pm25_cf_1 - 0.0844 * data.humidity
 }
 
-export async function getAqi(): Promise<number> {
-  const apiUrl = "https://www.purpleair.com/json?key=LEGDS9XCK5RRE19Z&show=65513"
-  const resp = await fetch(new Request(apiUrl))
+export async function getAqi(sensor_id: BigInt): Promise<number> {
+  let apiUrl = new URL("https://www.purpleair.com/json")
+  apiUrl.searchParams.append("show", ""+sensor_id)
+  const resp = await fetch(new Request(apiUrl.href))
   const rawData = await resp.json() as RawSensorData
   const data = processData(rawData)
   const pm25 = epaAqi(data)
