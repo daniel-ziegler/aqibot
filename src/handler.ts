@@ -40,7 +40,7 @@ export async function handleScheduled(event: any /* ScheduledEvent */): Promise<
   if (!data) {
     throw new Error("no data")
   }
-  const aqi = await getAqi(data.sensor_id)
+  const [aqi, last_updated] = await getAqi(data.sensor_id)
   const lastCategory = data.last_category
   let newCategory = undefined  // won't update if undefined
   if ((lastCategory === null || lastCategory === "bad") && aqi <= THRESHOLD_LO) {
@@ -50,7 +50,9 @@ export async function handleScheduled(event: any /* ScheduledEvent */): Promise<
     newCategory = "bad"
     await postToSlack(`🟧 Close your windows! AQI ${aqi}`)
   }
-  await patchState(SITE, { last_aqi: aqi, last_category: newCategory, updated: new Date() })
+  await patchState(SITE, {
+    last_aqi: aqi, last_category: newCategory, updated: last_updated, retrieved: new Date()
+  })
 }
 
 async function postToSlack(text: string): Promise<void> {

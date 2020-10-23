@@ -7,6 +7,7 @@ type SiteState = {
   last_aqi: number
   last_category: string
   updated: Date
+  retrieved: Date
 }
 
 function is_valid(maybe_state: any): maybe_state is SiteState {
